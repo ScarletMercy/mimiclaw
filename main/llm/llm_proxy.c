@@ -61,8 +61,8 @@ static const char *llm_api_path(void)
     return provider_is_openai() || provider_is_longcat() ? "/v1/chat/completions" : "/v1/messages";
 }
 
-static void llm_log_payload(const char *label, const char *payload);
-
+static void llm_log_payload(const char *label, const char *payload)
+{
 #if MIMI_LLM_LOG_VERBOSE_PAYLOAD
     size_t shown = total > LLM_DUMP_MAX_BYTES ? LLM_DUMP_MAX_BYTES : total;
     ESP_LOGI(TAG, "%s (%u bytes)%s",
