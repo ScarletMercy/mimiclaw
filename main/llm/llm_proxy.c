@@ -627,21 +627,21 @@ esp_err_t llm_chat_tools(const char *system_prompt,
 
     if (err != ESP_OK) {
         ESP_LOGE(TAG, "HTTP request failed: %s", esp_err_to_name(err));
-        llm_log_payload("LLM tools partial response", rb.data);
+        llm_log_payload("LLM tools partial response", rb->data);
         resp_buf_free(&rb);
         return err;
     }
 
-    llm_log_payload("LLM tools raw response", rb.data);
+    llm_log_payload("LLM tools raw response", rb->data);
 
     if (status != 200) {
-        ESP_LOGE(TAG, "API error %d: %.500s", status, rb.data ? rb.data : "");
+        ESP_LOGE(TAG, "API error %d: %.500s", status, rb->data ? rb->data : "");
         resp_buf_free(&rb);
         return ESP_FAIL;
     }
 
     /* Parse full JSON response */
-    cJSON *root = cJSON_Parse(rb.data);
+    cJSON *root = cJSON_Parse(rb->data);
     resp_buf_free(&rb);
 
     if (!root) {
