@@ -61,30 +61,31 @@ static const char *llm_api_path(void)
     return provider_is_openai() || provider_is_longcat() ? "/v1/chat/completions" : "/v1/messages";
 }
 
-static void llm_log_payload(const char *label, const char *payload)
+static void llm_log_payload(const char *label, const char *payload_data)
 {
 #if MIMI_LLM_LOG_VERBOSE_PAYLOAD
-    size_t shown = total > LLM_DUMP_MAX_BYTES ? LLM_DUMP_MAX_BYTES : total;
+    size_t payload_len = strlen(payload_data);
+    size_t shown = payload_len > LLM_DUMP_MAX_BYTES ? LLM_DUMP_MAX_BYTES : payload_len;
     ESP_LOGI(TAG, "%s (%u bytes)%s",
              label,
-             (unsigned)total,
-             (shown < total) ? " [truncated]" : "");
-
+             (unsigned)payload_len,
+             (shown < payload_len) ? " [truncated]" : "");
+    
     char chunk[LLM_DUMP_CHUNK_BYTES + 1];
     for (size_t off = 0; off < shown; off += LLM_DUMP_CHUNK_BYTES) {
         size_t n = shown - off;
         if (n > LLM_DUMP_CHUNK_BYTES) {
             n = LLM_DUMP_CHUNK_BYTES;
         }
-        memcpy(chunk, payload + off, n);
+        memcpy(chunk, payload_data + off, n);
         chunk[n] = '\0';
         ESP_LOGI(TAG, "%s[%u]: %s", label, (unsigned)off, chunk);
     }
 #else
     if (MIMI_LLM_LOG_PREVIEW_BYTES > 0) {
-        size_t shown = total > MIMI_LLM_LOG_PREVIEW_BYTES ? MIMI_LLM_LOG_PREVIEW_BYTES : total;
+        size_t shown = payload_len > MIMI_LLM_LOG_PREVIEW_BYTES ? MIMI_LLM_LOG_PREVIEW_BYTES : payload_len;
         char preview[MIMI_LLM_LOG_PREVIEW_BYTES + 1];
-        memcpy(preview, payload, shown);
+        memcpy(preview, payload_data, shown);
         preview[shown] = '\0';
         for (size_t i = 0; i < shown; i++) {
             if (preview[i] == '\n' || preview[i] == '\r' || preview[i] == '\t') {
@@ -93,11 +94,11 @@ static void llm_log_payload(const char *label, const char *payload)
         }
         ESP_LOGI(TAG, "%s (%u bytes): %s%s",
                  label,
-                 (unsigned)total,
+                 (unsigned)payload_len,
                  preview,
-                 (shown < total) ? " ..." : "");
+                 (shown < payload_len) ? " ..." : "");
     } else {
-        ESP_LOGI(TAG, "%s (%u bytes)", label, (unsigned)total);
+        ESP_LOGI(TAG, "%s (%u bytes)", label, (unsigned)payload_len);
     }
 #endif
 }
