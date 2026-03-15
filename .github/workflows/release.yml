@@ -211,10 +211,7 @@ jobs:
         cat release_notes.md
 
     - name: Create GitHub Release
-      if: success()
-      needs: build
-      id: create_release
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+      if: success() && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
       env:
         TAG_NAME: ${{ github.ref_name }}
         RELEASE_NAME: MimiClaw Feishu Hybrid ${{ steps.version.outputs.VERSION_TAG }}
@@ -235,12 +232,9 @@ jobs:
           release/mimiclaw.map || echo "Release already exists, skipping..."
 
     - name: Manual Release
-      if: success()
-      needs: build
-      id: manual_release
-      if: github.event_name == 'workflow_dispatch' && inputs.create_release == 'true'
+      if: success() && github.event_name == 'workflow_dispatch' && inputs.create_release == 'true'
       env:
-        TAG: ${{ inputs.tag_name || 'v'$(date +'%Y.%m.%d') }}
+        TAG: ${{ inputs.tag_name || 'v1.0.2' }}
         RELEASE_NAME: ${{ inputs.release_name || 'MimiClaw Feishu Hybrid' }}
       run: |
         TAG="${{ env.TAG }}"
