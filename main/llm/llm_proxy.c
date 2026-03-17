@@ -317,8 +317,12 @@ static esp_err_t llm_http_direct(const char *post_data, resp_buf_t *rb, int *out
         .crt_bundle_attach = esp_crt_bundle_attach,
     };
 
+    ESP_LOGI(TAG, "Initiating direct HTTP request to %s", llm_api_url());
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    if (!client) return ESP_FAIL;
+    if (!client) {
+        ESP_LOGE(TAG, "Failed to init HTTP client for %s", llm_api_url());
+        return ESP_FAIL;
+    }
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_header(client, "Content-Type", "application/json");
@@ -344,8 +348,12 @@ static esp_err_t llm_http_direct(const char *post_data, resp_buf_t *rb, int *out
 
 static esp_err_t llm_http_via_proxy(const char *post_data, resp_buf_t *rb, int *out_status)
 {
+    ESP_LOGI(TAG, "Opening proxy connection to %s", llm_api_host());
     proxy_conn_t *conn = proxy_conn_open(llm_api_host(), 443, 30000);
-    if (!conn) return ESP_ERR_HTTP_CONNECT;
+    if (!conn) {
+        ESP_LOGE(TAG, "Failed to open proxy connection to %s", llm_api_host());
+        return ESP_ERR_HTTP_CONNECT;
+    }
 
     int body_len = strlen(post_data);
     char header[1024];
@@ -414,8 +422,10 @@ static esp_err_t llm_http_via_proxy(const char *post_data, resp_buf_t *rb, int *
 static esp_err_t llm_http_call(const char *post_data, resp_buf_t *rb, int *out_status)
 {
     if (http_proxy_is_enabled()) {
+        ESP_LOGI(TAG, "Using proxy for API call to %s", llm_api_host());
         return llm_http_via_proxy(post_data, rb, out_status);
     } else {
+        ESP_LOGI(TAG, "Using direct connection for API call to %s", llm_api_url());
         return llm_http_direct(post_data, rb, out_status);
     }
 }
